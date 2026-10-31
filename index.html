@@ -105,7 +105,6 @@
 <div class="calc-container">
     <h2>📊 Конфигуратор стоимости ЧПУ Borui (РБ)</h2>
     
-    <!-- Выбор категории -->
     <div class="form-group">
         <label for="category">Категория оборудования:</label>
         <select id="category" onchange="updateModels()">
@@ -118,15 +117,13 @@
         </select>
     </div>
 
-    <!-- Выбор модели -->
     <div class="form-group">
         <label for="model">Выберите модель станка:</label>
         <select id="model" onchange="calculateCost()">
-            <!-- Заполняется автоматически из JS -->
+            <!-- Заполняется автоматически -->
         </select>
     </div>
 
-    <!-- Технические параметры выбранного станка -->
     <div class="spec-box">
         <div class="spec-grid">
             <div><strong>Базовая масса:</strong> <span id="spec-weight">0</span> кг</div>
@@ -134,7 +131,6 @@
         </div>
     </div>
 
-    <!-- Результаты калькуляции -->
     <div class="results-box">
         <div class="result-row">
             <span>Цена завода (CNY):</span>
@@ -170,12 +166,10 @@
 </div>
 
 <script>
-// Глобальные константы из вашей аналитики
 const CURSE_CNY_BYN = 0.47;
 const LOGISTICS_PER_KG = 3.10;
-const DOCS_COST = 2000; // 1800 сертификат + 200 декларант
+const DOCS_COST = 2000;
 
-// База данных оборудования Borui из вашей таблицы
 const db = [
     { name: "Фрезерный станок XH 7126 (Акция)", cat: "milling", price: 81700, weight: 2200, duty: 1.08, margin: 1.35, tnved: "8457" },
     { name: "Вертикальный ОЦ VMC850 (3 оси)", cat: "milling", price: 140600, weight: 5000, duty: 1.08, margin: 1.25, tnved: "845710" },
@@ -214,15 +208,13 @@ function updateModels() {
 
 function calculateCost() {
     const modelIndex = document.getElementById('model').value;
-    if (modelIndex === "") return;
+    if (modelIndex === "" || modelIndex === undefined) return;
     
     const machine = db[modelIndex];
 
-    // Вычисление согласно формулам вашей таблицы
     const priceBYNBase = machine.price * CURSE_CNY_BYN;
     const logistics = machine.weight * LOGISTICS_PER_KG;
     
-    // Пошлина считает разницу между растаможенным базисом и чистой суммой станка и логистики
     const withDuty = (priceBYNBase + logistics) * machine.duty;
     const customsClearance = withDuty - (priceBYNBase + logistics);
     
@@ -231,20 +223,20 @@ function calculateCost() {
     const vat = priceWithMargin * 0.20;
     const finalPriceWithVat = priceWithMargin + vat;
 
-    // Вывод технических данных
     document.getElementById('spec-weight').innerText = machine.weight.toLocaleString('ru-RU');
     document.getElementById('spec-tnved').innerText = machine.tnved;
 
-    // Вывод финансовых результатов
     document.getElementById('res-cny').innerText = machine.price.toLocaleString('ru-RU', {minimumFractionDigits: 2}) + " ¥";
     document.getElementById('res-byn-base').innerText = priceBYNBase.toLocaleString('ru-RU', {minimumFractionDigits: 2}) + " р.";
     document.getElementById('res-logistics').innerText = logistics.toLocaleString('ru-RU', {minimumFractionDigits: 2}) + " р.";
     document.getElementById('res-customs').innerText = (customsClearance + DOCS_COST).toLocaleString('ru-RU', {minimumFractionDigits: 2}) + " р.";
-
-document.getElementById('res-without-vat').innerText = priceWithMargin.toLocaleString('ru-RU', {minimumFractionDigits: 2}) + " р.";
-document.getElementById('res-vat').innerText = vat.toLocaleString('ru-RU', {minimumFractionDigits: 2}) + " р.";
-document.getElementById('res-total').innerText = finalPriceWithVat.toLocaleString('ru-RU', {minimumFractionDigits: 2}) + " р.";
+    document.getElementById('res-without-vat').innerText = priceWithMargin.toLocaleString('ru-RU', {minimumFractionDigits: 2}) + " р.";
+    document.getElementById('res-vat').innerText = vat.toLocaleString('ru-RU', {minimumFractionDigits: 2}) + " р.";
+    document.getElementById('res-total').innerText = finalPriceWithVat.toLocaleString('ru-RU', {minimumFractionDigits: 2}) + " р.";
 }
-// Инициализация при загрузке страницы
-updateModels();
 
+updateModels();
+</script>
+
+</body>
+</html>

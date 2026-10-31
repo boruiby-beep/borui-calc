@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Конфигуратор Borui CNC - Беларусь</title>
+    <title>Официальный Конфигуратор Borui CNC - Беларусь</title>
     <style>
         :root {
             --primary: #0056b3;
@@ -55,11 +55,10 @@
             font-size: 16px;
             background-color: white;
         }
-        /* Блок для картинки станка */
         .image-container {
             width: 100%;
-            max-width: 400px;
-            height: 250px;
+            max-width: 420px;
+            height: 260px;
             margin: 20px auto;
             border: 1px solid var(--border);
             border-radius: 8px;
@@ -73,7 +72,7 @@
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
-            display: none; /* Скрыто, пока не загрузится */
+            display: none;
         }
         .image-placeholder {
             color: #adb5bd;
@@ -137,30 +136,27 @@
     <div class="subtitle">Расчет стоимости промышленного оборудования «ПОД КЛЮЧ» для Республики Беларусь</div>
     
     <div class="form-group">
-        <label for="category">Категория станков (из каталога 2025):</label>
+        <label for="category">Категория оборудования:</label>
         <select id="category" onchange="updateModels()">
-            <option value="all">Все оборудование Borui</option>
-            <option value="gantry">CNC Gantry Machining Center (Портальные ОЦ)</option>
-            <option value="five_axis">CNC Five-Axis Machining Center (5-осевые ОЦ)</option>
-            <option value="vertical">CNC Vertical Machining Center (Вертикальные ОЦ)</option>
-            <option value="horizontal">Horizontal Machining Center (卧式加工中心)</option>
-            <option value="slant_bed">CNC Slant Bed Lathe Machine (斜床身数控车床)</option>
-            <option value="flat_bed">CNC Flat Bed Lathe (平床身数控车床)</option>
-            <option value="drilling_tapping">CNC Vertical Drilling and Tapping Center (钻攻中心)</option>
-            <option value="milling">CNC Milling Machine (数控铣床)</option>
+            <option value="all">Все станки</option>
+            <option value="milling">Фрезерные и ОЦ</option>
+            <option value="turning">Токарные станки</option>
+            <option value="erosion">Эрозионные станки</option>
+            <option value="grinding">Шлифовальные станки</option>
+            <option value="other">Другое (Лазеры, пилы, гибка)</option>
         </select>
     </div>
 
     <div class="form-group">
         <label for="model">Выберите модель станка:</label>
         <select id="model" onchange="calculateCost()">
-            <!-- Заполняется кодом -->
+            <!-- Заполняется автоматически -->
         </select>
     </div>
 
-    <!-- Визуальный блок станка -->
+    <!-- Блок картинки -->
     <div class="image-container">
-        <div id="img-placeholder" class="image-placeholder">Загрузка изображения...</div>
+        <div id="img-placeholder" class="image-placeholder">Выберите станок для просмотра фото</div>
         <img id="machine-photo" src="" alt="Станок Borui" onload="onImageLoad()" onerror="onImageError()">
     </div>
 
@@ -210,22 +206,21 @@ const CURSE_CNY_BYN = 0.47;
 const LOGISTICS_PER_KG = 3.10;
 const DOCS_COST = 2000;
 
-// База данных с добавленными прямыми ссылками на картинки Borui
+// Исправленная и проверенная база данных строго на русском языке
 const db = [
-    { name: "Портальный ОЦ BR1312", cat: "gantry", price: 327000, weight: 9500, duty: 1.08, margin: 1.15, tnved: "845710", img: "https://boruimc.com" },
-    { name: "Портальный ОЦ BR1613", cat: "gantry", price: 369000, weight: 12500, duty: 1.08, margin: 1.50, tnved: "845710", img: "https://boruimc.com" },
-    { name: "Портальный ОЦ BR2216", cat: "gantry", price: 435000, weight: 15000, duty: 1.08, margin: 1.15, tnved: "845710", img: "https://boruimc.com" },
-    { name: "Портальный ОЦ BR3218", cat: "gantry", price: 600000, weight: 28000, duty: 1.08, margin: 1.20, tnved: "845710", img: "https://boruimc.com" },
-    
-    { name: "5-осевой ОЦ BR-WZ650B (牛头式)", cat: "five_axis", price: 516000, weight: 7500, duty: 1.08, margin: 1.15, tnved: "845710", img: "https://boruimc.com" },
-    { name: "5-осевой ОЦ BR-TW650 (天车式)", cat: "five_axis", price: 627000, weight: 7500, duty: 1.08, margin: 1.15, tnved: "845710", img: "https://boruimc.com" },
-    
-    { name: "Вертикальный ОЦ VMC650", cat: "vertical", price: 110000, weight: 3600, duty: 1.08, margin: 1.20, tnved: "845710", img: "https://boruimc.com" },
-    { name: "Вертикальный ОЦ VMC850 (3 оси)", cat: "vertical", price: 140600, weight: 5000, duty: 1.08, margin: 1.25, tnved: "845710", img: "https://boruimc.com" },
-    { name: "Вертикальный ОЦ VMC855", cat: "vertical", price: 148000, weight: 5200, duty: 1.08, margin: 1.20, tnved: "845710", img: "https://boruimc.com" },
-    { name: "Вертикальный ОЦ VMC1160 (GSK)", cat: "vertical", price: 168150, weight: 6800, duty: 1.08, margin: 1.20, tnved: "845710", img: "https://boruimc.com" },
-    
-    { name: "卧式加工中心 HMC63H", cat: "horizontal", price: 380000, weight: 12000, duty: 1.08, margin: 1.20, tnved: "845710", img: "https://boruimc.com" },
-    
-    { name: "Токарный станок BR570 (GSK)", cat: "slant_bed", price: 161500, weight: 3800, duty: 1.08, margin: 1.50, tnved: "845811" , img: "https://boruimc.com" },
-    { name: "Токарный станок BR570DY (GSK)", cat: "slant_bed", price: 203700, weight: 3800, duty: 1.08, margin: 1.50, tnved: "845811", img: "https://boruimc.com" },
+    { name: "Фрезерный станок XH 7126 (Акция)", cat: "milling", price: 81700, weight: 2200, duty: 1.08, margin: 1.35, tnved: "8457", img: "https://boruimc.com" },
+    { name: "Вертикальный ОЦ VMC850 (3 оси)", cat: "milling", price: 140600, weight: 5000, duty: 1.08, margin: 1.25, tnved: "845710", img: "https://boruimc.com" },
+    { name: "Вертикальный ОЦ VMC850 (4 оси)", cat: "milling", price: 161700, weight: 5200, duty: 1.08, margin: 1.15, tnved: "845710", img: "https://boruimc.com" },
+    { name: "Вертикальный ОЦ VMC1160 (3 оси GSK)", cat: "milling", price: 168150, weight: 6500, duty: 1.08, margin: 1.20, tnved: "845710", img: "https://boruimc.com" },
+    { name: "Портальный обрабатывающий центр BR1311А", cat: "milling", price: 327000, weight: 6000, duty: 1.08, margin: 1.15, tnved: "8457", img: "https://boruimc.com" },
+    { name: "Токарный станок 6150 (ГСК панель)", cat: "turning", price: 82770, weight: 2800, duty: 1.08, margin: 1.15, tnved: "845811", img: "https://boruimc.com" },
+    { name: "Токарный станок 6150 (Siemens панель)", cat: "turning", price: 129508, weight: 2800, duty: 1.08, margin: 1.15, tnved: "845811", img: "https://boruimc.com" },
+    { name: "Токарный с наклонной станиной BR 160L", cat: "turning", price: 141900, weight: 3200, duty: 1.08, margin: 1.15, tnved: "845811", img: "https://boruimc.com" },
+    { name: "Токарный с наклонной станиной BR 150 LADY (GSK)", cat: "turning", price: 156900, weight: 2300, duty: 1.08, margin: 1.15, tnved: "845811", img: "https://boruimc.com" },
+    { name: "Токарно-винторезный CA6250BX2000 (УЦИ)", cat: "turning", price: 92700, weight: 2800, duty: 1.05, margin: 1.30, tnved: "845819", img: "https://boruimc.com" },
+    { name: "Эрозионный станок DK7745 (Шаговый)", cat: "erosion", price: 50000, weight: 1800, duty: 1.00, margin: 1.15, tnved: "845630", img: "" },
+    { name: "Эрозионный станок DK7745 (Серво, 30°)", cat: "erosion", price: 66000, weight: 1800, duty: 1.00, margin: 1.20, tnved: "845630", img: "" },
+    { name: "Плоскошлифовальный станок М7150х30", cat: "grinding", price: 238500, weight: 10000, duty: 1.08, margin: 1.20, tnved: "846022", img: "" },
+    { name: "Круглошлифовальный станок М1420х500", cat: "grinding", price: 90000, weight: 2500, duty: 1.10, margin: 1.15, tnved: "846023", img: "" },
+    { name: "Волоконный лазер BR3015 (6000 Вт)", cat: "other", price: 213000, weight: 5600, duty: 1.00, margin: 1.20, tnved: "845611", img: "" },
+    { name: "Листогиб с ЧПУ 100T/2500", cat: "other", price: 101500, weight: 5100, duty: 1.07, margin: 1.20, tnved: "846229", img: "" },

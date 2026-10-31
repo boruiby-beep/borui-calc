@@ -224,3 +224,70 @@ const db = [
     { name: "Круглошлифовальный станок М1420х500", cat: "grinding", price: 90000, weight: 2500, duty: 1.10, margin: 1.15, tnved: "846023", img: "" },
     { name: "Волоконный лазер BR3015 (6000 Вт)", cat: "other", price: 213000, weight: 5600, duty: 1.00, margin: 1.20, tnved: "845611", img: "" },
     { name: "Листогиб с ЧПУ 100T/2500", cat: "other", price: 101500, weight: 5100, duty: 1.07, margin: 1.20, tnved: "846229", img: "" },
+    { name: "Листогиб с ЧПУ 100T/2500", cat: "other", price: 101500, weight: 5100, duty: 1.07, margin: 1.20, tnved: "846229", img: "" },
+{ name: "Автоматическая ленточная пила GHS4230", cat: "other", price: 39000, weight: 1500, duty: 1.09, margin: 1.20, tnved: "846150", img: "" }
+];
+function updateModels() {
+const catSelect = document.getElementById('category').value;
+const modelSelect = document.getElementById('model');
+modelSelect.innerHTML = '';
+db.forEach((item, index) => {
+if (catSelect === 'all' || item.cat === catSelect) {
+let opt = document.createElement('option');
+opt.value = index;
+opt.innerHTML = item.name;
+modelSelect.appendChild(opt);
+}
+});
+calculateCost();
+}
+function calculateCost() {
+const modelIndex = document.getElementById('model').value;
+if (modelIndex === "" || modelIndex === null || modelIndex === undefined) return;
+const machine = db[modelIndex];
+// Управление фотографиями станка
+const imgEl = document.getElementById('machine-photo');
+const placeholderEl = document.getElementById('img-placeholder');
+if (machine.img && machine.img !== "") {
+imgEl.style.display = 'none';
+placeholderEl.style.display = 'block';
+placeholderEl.innerText = 'Загрузка изображения...';
+imgEl.src = machine.img;
+} else {
+imgEl.style.display = 'none';
+placeholderEl.style.display = 'block';
+placeholderEl.innerText = 'Фото для данной модели в процессе добавления';
+}
+// Алгоритм расчетов по вашей таблице аналитики
+const priceBYNBase = machine.price * CURSE_CNY_BYN;
+const logistics = machine.weight * LOGISTICS_PER_KG;
+const withDuty = (priceBYNBase + logistics) * machine.duty;
+const customsClearance = withDuty - (priceBYNBase + logistics);
+const totalWithDocs = withDuty + DOCS_COST;
+const priceWithMargin = totalWithDocs * machine.margin;
+const vat = priceWithMargin * 0.20;
+const finalPriceWithVat = priceWithMargin + vat;
+// Вывод технических характеристик
+document.getElementById('spec-weight').innerText = machine.weight.toLocaleString('ru-RU');
+document.getElementById('spec-tnved').innerText = machine.tnved;
+// Вывод финансовых показателей
+document.getElementById('res-cny').innerText = machine.price.toLocaleString('ru-RU', {minimumFractionDigits: 2}) + " ¥";
+document.getElementById('res-byn-base').innerText = priceBYNBase.toLocaleString('ru-RU', {minimumFractionDigits: 2}) + " р.";
+document.getElementById('res-logistics').innerText = logistics.toLocaleString('ru-RU', {minimumFractionDigits: 2}) + " р.";
+document.getElementById('res-customs').innerText = (customsClearance + DOCS_COST).toLocaleString('ru-RU', {minimumFractionDigits: 2}) + " р.";
+document.getElementById('res-without-vat').innerText = priceWithMargin.toLocaleString('ru-RU', {minimumFractionDigits: 2}) + " р.";
+document.getElementById('res-vat').innerText = vat.toLocaleString('ru-RU', {minimumFractionDigits: 2}) + " р.";
+document.getElementById('res-total').innerText = finalPriceWithVat.toLocaleString('ru-RU', {minimumFractionDigits: 2}) + " р.";
+}
+function onImageLoad() {
+document.getElementById('machine-photo').style.display = 'block';
+document.getElementById('img-placeholder').style.display = 'none';
+}
+function onImageError() {
+document.getElementById('machine-photo').style.display = 'none';
+document.getElementById('img-placeholder').style.display = 'block';
+document.getElementById('img-placeholder').innerText = 'Изображение подгружается с завода...';
+}
+// Первичная инициализация меню при загрузке
+updateModels();
+

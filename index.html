@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Конфигуратор Borui CNC - Беларусь</title>
+    <style>
+        :root {
+            --primary: #0056b3;
+            --dark: #212529;
+            --light: #f8f9fa;
+            --border: #dee2e6;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f4f6f9;
+            color: var(--dark);
+            padding: 20px;
+            margin: 0;
+        }
+        .calc-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        h2 {
+            text-align: center;
+            color: var(--primary);
+            margin-top: 0;
+            margin-bottom: 25px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        .spec-box {
+            background: var(--light);
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid var(--primary);
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+        .spec-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .results-box {
+            background: #e9ecef;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 25px;
+        }
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #ced4da;
+        }
+        .result-row:last-child {
+            border-bottom: none;
+            font-size: 20px;
+            font-weight: bold;
+            color: #d9534f;
+            padding-top: 15px;
+        }
+        .btn-submit {
+            display: block;
+            width: 100%;
+            background: var(--primary);
+            color: #fff;
+            text-align: center;
+            padding: 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            text-decoration: none;
+        }
+        .btn-submit:hover {
+            background: #004085;
+        }
+    </style>
+</head>
+<body>
+
+<div class="calc-container">
+    <h2>📊 Конфигуратор стоимости ЧПУ Borui (РБ)</h2>
+    
+    <!-- Выбор категории -->
+    <div class="form-group">
+        <label for="category">Категория оборудования:</label>
+        <select id="category" onchange="updateModels()">
+            <option value="all">Все станки</option>
+            <option value="milling">Фрезерные и ОЦ</option>
+            <option value="turning">Токарные станки</option>
+            <option value="erosion">Эрозионные станки</option>
+            <option value="grinding">Шлифовальные станки</option>
+            <option value="other">Другое (Лазеры, пилы, гибка)</option>
+        </select>
+    </div>
+
+    <!-- Выбор модели -->
+    <div class="form-group">
+        <label for="model">Выберите модель станка:</label>
+        <select id="model" onchange="calculateCost()">
+            <!-- Заполняется автоматически из JS -->
+        </select>
+    </div>
+
+    <!-- Технические параметры выбранного станка -->
+    <div class="spec-box">
+        <div class="spec-grid">
+            <div><strong>Базовая масса:</strong> <span id="spec-weight">0</span> кг</div>
+            <div><strong>Заводской код ТН ВЭД:</strong> <span id="spec-tnved">-</span></div>
+        </div>
+    </div>
+
+    <!-- Результаты калькуляции -->
+    <div class="results-box">
+        <div class="result-row">
+            <span>Цена завода (CNY):</span>
+            <span id="res-cny">0.00 ¥</span>
+        </div>
+        <div class="result-row">
+            <span>Цена завода (BYN):</span>
+            <span id="res-byn-base">0.00 р.</span>
+        </div>
+        <div class="result-row">
+            <span>Логистика в РБ:</span>
+            <span id="res-logistics">0.00 р.</span>
+        </div>
+        <div class="result-row">
+            <span>Таможенная очистка и сбор:</span>
+            <span id="res-customs">0.00 р.</span>
+        </div>
+        <div class="result-row">
+            <span>Стоимость без НДС (с учетом ПНР/дилера):</span>
+            <span id="res-without-vat">0.00 р.</span>
+        </div>
+        <div class="result-row">
+            <span>НДС (20%):</span>
+            <span id="res-vat">0.00 р.</span>
+        </div>
+        <div class="result-row">
+            <strong>Итоговая цена с НДС (Минск):</strong>
+            <span id="res-total">0.00 р.</span>
+        </div>
+    </div>
+    
+    <button class="btn-submit" onclick="alert('Заявка отправлена! Мы свяжемся с вами для подготовки официального КП.')">Получить коммерческое предложение</button>
+</div>
+
+<script>
+// Глобальные константы из вашей аналитики
+const CURSE_CNY_BYN = 0.47;
+const LOGISTICS_PER_KG = 3.10;
+const DOCS_COST = 2000; // 1800 сертификат + 200 декларант
+
+// База данных оборудования Borui из вашей таблицы
+const db = [
+    { name: "Фрезерный станок XH 7126 (Акция)", cat: "milling", price: 81700, weight: 2200, duty: 1.08, margin: 1.35, tnved: "8457" },
+    { name: "Вертикальный ОЦ VMC850 (3 оси)", cat: "milling", price: 140600, weight: 5000, duty: 1.08, margin: 1.25, tnved: "845710" },
+    { name: "Вертикальный ОЦ VMC850 (4 оси)", cat: "milling", price: 161700, weight: 5200, duty: 1.08, margin: 1.15, tnved: "845710" },
+    { name: "Вертикальный ОЦ VMC1160 (3 оси GSK)", cat: "milling", price: 168150, weight: 6500, duty: 1.08, margin: 1.20, tnved: "845710" },
+    { name: "Портальный обрабатывающий центр BR1311А", cat: "milling", price: 327000, weight: 6000, duty: 1.08, margin: 1.15, tnved: "8457" },
+    { name: "Токарный станок 6150 (ГСК панель)", cat: "turning", price: 82770, weight: 2800, duty: 1.08, margin: 1.15, tnved: "845811" },
+    { name: "Токарный станок 6150 (Siemens панель)", cat: "turning", price: 129508, weight: 2800, duty: 1.08, margin: 1.15, tnved: "845811" },
+    { name: "Токарный с наклонной станиной BR 160L", cat: "turning", price: 141900, weight: 3200, duty: 1.08, margin: 1.15, tnved: "845811" },
+    { name: "Токарный с наклонной станиной BR 150 LADY (GSK)", cat: "turning", price: 156900, weight: 2300, duty: 1.08, margin: 1.15, tnved: "845811" },
+    { name: "Токарно-винторезный CA6250BX2000 (УЦИ)", cat: "turning", price: 92700, weight: 2800, duty: 1.05, margin: 1.30, tnved: "845819" },
+    { name: "Эрозионный станок DK7745 (Шаговый)", cat: "erosion", price: 50000, weight: 1800, duty: 1.00, margin: 1.15, tnved: "845630" },
+    { name: "Эрозионный станок DK7745 (Серво, 30°)", cat: "erosion", price: 66000, weight: 1800, duty: 1.00, margin: 1.20, tnved: "845630" },
+    { name: "Плоскошлифовальный станок М7150х30", cat: "grinding", price: 238500, weight: 10000, duty: 1.08, margin: 1.20, tnved: "846022" },
+    { name: "Круглошлифовальный станок М1420х500", cat: "grinding", price: 90000, weight: 2500, duty: 1.10, margin: 1.15, tnved: "846023" },
+    { name: "Волоконный лазер BR3015 (6000 Вт)", cat: "other", price: 213000, weight: 5600, duty: 1.00, margin: 1.20, tnved: "845611" },
+    { name: "Листогиб с ЧПУ 100T/2500", cat: "other", price: 101500, weight: 5100, duty: 1.07, margin: 1.20, tnved: "846229" },
+    { name: "Автоматическая ленточная пила GHS4230", cat: "other", price: 39000, weight: 1500, duty: 1.09, margin: 1.20, tnved: "846150" }
+];
+
+function updateModels() {
+    const catSelect = document.getElementById('category').value;
+    const modelSelect = document.getElementById('model');
+    modelSelect.innerHTML = '';
+
+    db.forEach((item, index) => {
+        if (catSelect === 'all' || item.cat === catSelect) {
+            let opt = document.createElement('option');
+            opt.value = index;
+            opt.innerHTML = item.name;
+            modelSelect.appendChild(opt);
+        }
+    });
+    calculateCost();
+}
+
+function calculateCost() {
+    const modelIndex = document.getElementById('model').value;
+    if (modelIndex === "") return;
+    
+    const machine = db[modelIndex];
+
+    // Вычисление согласно формулам вашей таблицы
+    const priceBYNBase = machine.price * CURSE_CNY_BYN;
+    const logistics = machine.weight * LOGISTICS_PER_KG;
+    
+    // Пошлина считает разницу между растаможенным базисом и чистой суммой станка и логистики
+    const withDuty = (priceBYNBase + logistics) * machine.duty;
+    const customsClearance = withDuty - (priceBYNBase + logistics);
+    
+    const totalWithDocs = withDuty + DOCS_COST;
+    const priceWithMargin = totalWithDocs * machine.margin;
+    const vat = priceWithMargin * 0.20;
+    const finalPriceWithVat = priceWithMargin + vat;
+
+    // Вывод технических данных
+    document.getElementById('spec-weight').innerText = machine.weight.toLocaleString('ru-RU');
+    document.getElementById('spec-tnved').innerText = machine.tnved;
+
+    // Вывод финансовых результатов
+    document.getElementById('res-cny').innerText = machine.price.toLocaleString('ru-RU', {minimumFractionDigits: 2}) + " ¥";
+    document.getElementById('res-byn-base').innerText = priceBYNBase.toLocaleString('ru-RU', {minimumFractionDigits: 2}) + " р.";
+    document.getElementById('res-logistics').innerText = logistics.toLocaleString('ru-RU', {minimumFractionDigits: 2}) + " р.";
+    document.getElementById('res-customs').innerText = (customsClearance + DOCS_COST).toLocaleString('ru-RU', {minimumFractionDigits: 2}) + " р.";
+
+document.getElementById('res-without-vat').innerText = priceWithMargin.toLocaleString('ru-RU', {minimumFractionDigits: 2}) + " р.";
+document.getElementById('res-vat').innerText = vat.toLocaleString('ru-RU', {minimumFractionDigits: 2}) + " р.";
+document.getElementById('res-total').innerText = finalPriceWithVat.toLocaleString('ru-RU', {minimumFractionDigits: 2}) + " р.";
+}
+// Инициализация при загрузке страницы
+updateModels();
+
